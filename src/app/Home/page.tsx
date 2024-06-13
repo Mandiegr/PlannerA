@@ -6,7 +6,7 @@ import Link from 'next/link';
 import SingIn from '../SingIn/page';
 
 
-export default function Home() {
+export  function Home() {
   return (
     <Main>
       
@@ -22,3 +22,4 @@ export default function Home() {
     </Main>
   )
 }
+export default Home;
