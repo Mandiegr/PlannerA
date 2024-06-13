@@ -23,7 +23,3 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
 
-=======
-
-<a href="https://imgur.com/H7QfVQW"><img src="https://i.imgur.com/H7QfVQW.png" title="source: imgur.com" /></a>
->>>>>>> 1873c1b6c69081ec531229d1ae883b56683117e4

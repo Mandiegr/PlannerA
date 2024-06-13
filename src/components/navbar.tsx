@@ -10,7 +10,7 @@ interface NavbarProps {
   notifications: any[];
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ handleColorChange, notifications }) => {
+const Navbar: React.FC<NavbarProps> = ({ handleColorChange, notifications }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showConfiguration, setShowConfiguration] = useState(false);
   const [showTheme, setShowTheme] = useState(false);
