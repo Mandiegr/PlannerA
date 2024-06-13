@@ -10,6 +10,7 @@ import { DateSelectArg, EventClickArg, EventApi, EventInput, EventChangeArg } fr
 import { Button, CallendarContainer, Model } from './styles-callendar';
 import { useQuery } from 'react-query';
 import moment from 'moment';
+import { User } from 'firebase/auth';
 
 interface MyCalendarProps {
   handleEventNotification: (eventNotification: any) => void;
@@ -22,28 +23,34 @@ const MyCalendar: React.FC<MyCalendarProps> = ({ handleEventNotification }) => {
   const [showEditForm, setShowEditForm] = useState(false);
   const [formData, setFormData] = useState({ title: '', start: '', end: '' });
   const [selectedEvent, setSelectedEvent] = useState<EventInput | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(auth.currentUser);
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
   useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(user => {
+      setCurrentUser(user);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
     const buscarEventos = async () => {
-      if (auth.currentUser) {
-        const userId = auth.currentUser.uid;
+      if (currentUser) {
+        const userId = currentUser.uid;
         const eventosRef = collection(db, 'eventos');
         const queryRef = query(eventosRef, where('ownerId', '==', userId));
         const querySnapshot = await getDocs(queryRef);
-        const eventosBuscados = querySnapshot.docs.map(doc => {
-          return {
-            id: doc.id,
-            ...doc.data()
-          };
-        });
+        const eventosBuscados = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
         setEvents(eventosBuscados);
       }
     };
     buscarEventos();
-  }, [auth.currentUser, db]);
+  }, [currentUser, db]);
 
   const { isLoading, error, data } = useQuery('events', async () => {
     const eventosProximos = events.filter(event => {
@@ -53,8 +60,6 @@ const MyCalendar: React.FC<MyCalendarProps> = ({ handleEventNotification }) => {
     });
     return eventosProximos;
   });
-  
-  
 
   const handleDateSelect = (arg: DateSelectArg) => {
     setFormData({
@@ -75,26 +80,25 @@ const MyCalendar: React.FC<MyCalendarProps> = ({ handleEventNotification }) => {
       handleEventNotification(updatedEvent.toPlainObject());
     }
   };
-  
 
   const handleSubmit = async () => {
     const { title, start, end } = formData;
     if (title && start && end) {
-      const userId = auth.currentUser ? auth.currentUser.uid : null;
+      const userId = currentUser ? currentUser.uid : null;
       const newEvent = {
         title,
         start: new Date(start).toISOString(),
-        end: new Date(end).toISOString(), 
+        end: new Date(end).toISOString(),
         allDay: false,
         createdAt: serverTimestamp(),
         ownerId: userId,
-        edited: false, 
+        edited: false,
       };
       try {
         const eventosRef = collection(db, 'eventos');
         const docRef = await addDoc(eventosRef, newEvent);
-        const addedEvent = { ...newEvent, id: docRef.id }; 
-        setEvents(prevEvents => [...prevEvents, addedEvent]); 
+        const addedEvent = { ...newEvent, id: docRef.id };
+        setEvents(prevEvents => [...prevEvents, addedEvent]);
         setShowForm(false);
         handleEventNotification(addedEvent);
       } catch (error) {
@@ -105,27 +109,24 @@ const MyCalendar: React.FC<MyCalendarProps> = ({ handleEventNotification }) => {
       alert('Por favor, preencha todos os campos do formulário.');
     }
   };
-  
+
   const handleEditSubmit = async () => {
     const { title, start, end } = formData;
     if (title && start && end && selectedEvent && selectedEvent.id) {
-      const userId = auth.currentUser ? auth.currentUser.uid : null;
+      const userId = currentUser ? currentUser.uid : null;
       const updatedEvent = {
         ...selectedEvent,
         title,
-        start: new Date(start).toISOString(), 
+        start: new Date(start).toISOString(),
         end: new Date(end).toISOString(),
         ownerId: userId,
-         edited: true,
+        edited: true,
       };
       try {
         await updateDoc(doc(db, 'eventos', selectedEvent.id), updatedEvent);
-        setEvents(prevEvents => {
-          const updatedEvents = prevEvents.map(event =>
-            event.id === selectedEvent.id ? updatedEvent : event
-          );
-          return updatedEvents;
-        });
+        setEvents(prevEvents => prevEvents.map(event =>
+          event.id === selectedEvent.id ? updatedEvent : event
+        ));
         setShowEditForm(false);
         //handleEventNotification(updatedEvent);
       } catch (error) {
@@ -161,8 +162,6 @@ const MyCalendar: React.FC<MyCalendarProps> = ({ handleEventNotification }) => {
       console.error('ID do evento não está disponível');
     }
   };
-  
-  
 
   return (
     <CallendarContainer>
@@ -226,7 +225,6 @@ const MyCalendar: React.FC<MyCalendarProps> = ({ handleEventNotification }) => {
             <Button onClick={handleDelete}>Excluir Evento</Button>
             <Button onClick={handleEditSubmit}>Editar Evento</Button>
           </div>
-        
         </Model>
       )}
     </CallendarContainer>
