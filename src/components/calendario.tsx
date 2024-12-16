@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, addDoc, serverTimestamp, getDocs, query, where, deleteDoc, doc, updateDoc } from 'firebase/firestore';
-import { auth, firebaseConfig } from '@/config/firebaseConfig';
+import { auth, firebaseConfig } from '../config/firebaseConfig';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { DateSelectArg, EventClickArg, EventApi, EventInput, EventChangeArg } from '@fullcalendar/core';
-import { Button, CallendarContainer, Model } from './styles-callendar';
+import { Button, CalendarContainer, Model, CloseButton, ButtonContainer, ModelContainer } from './styles-callendar';
 import { useQuery } from 'react-query';
 import moment from 'moment';
-import { User } from 'firebase/auth';
+import { XCircle } from 'react-bootstrap-icons';
 
 interface MyCalendarProps {
   handleEventNotification: (eventNotification: any) => void;
@@ -23,34 +23,28 @@ const MyCalendar: React.FC<MyCalendarProps> = ({ handleEventNotification }) => {
   const [showEditForm, setShowEditForm] = useState(false);
   const [formData, setFormData] = useState({ title: '', start: '', end: '' });
   const [selectedEvent, setSelectedEvent] = useState<EventInput | null>(null);
-  const [currentUser, setCurrentUser] = useState<User | null>(auth.currentUser);
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(user => {
-      setCurrentUser(user);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
     const buscarEventos = async () => {
-      if (currentUser) {
-        const userId = currentUser.uid;
+      if (auth.currentUser) {
+        const userId = auth.currentUser.uid;
         const eventosRef = collection(db, 'eventos');
         const queryRef = query(eventosRef, where('ownerId', '==', userId));
         const querySnapshot = await getDocs(queryRef);
-        const eventosBuscados = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
+        const eventosBuscados = querySnapshot.docs.map(doc => {
+          return {
+            id: doc.id,
+            ...doc.data()
+          };
+        });
         setEvents(eventosBuscados);
       }
     };
     buscarEventos();
-  }, [currentUser, db]);
+  }, [auth.currentUser, db]);
 
   const { isLoading, error, data } = useQuery('events', async () => {
     const eventosProximos = events.filter(event => {
@@ -62,16 +56,36 @@ const MyCalendar: React.FC<MyCalendarProps> = ({ handleEventNotification }) => {
   });
 
   const handleDateSelect = (arg: DateSelectArg) => {
+    const start = moment(arg.start).format('YYYY-MM-DDTHH:mm');
+    const end = arg.end ? moment(arg.end).format('YYYY-MM-DDTHH:mm') : start;
     setFormData({
       title: '',
-      start: arg.startStr,
-      end: arg.endStr || arg.startStr,
+      start,
+      end,
+    });
+    setShowForm(true);
+  };
+
+  const handleDateClick = (arg: { dateStr: string }) => {
+    const start = moment(arg.dateStr).format('YYYY-MM-DDTHH:mm');
+    const end = moment(arg.dateStr).format('YYYY-MM-DDTHH:mm');
+    setFormData({
+      title: '',
+      start,
+      end,
     });
     setShowForm(true);
   };
 
   const handleEventClick = (info: EventClickArg) => {
     setSelectedEvent(info.event.toPlainObject());
+    const start = moment(info.event.start).format('YYYY-MM-DDTHH:mm');
+    const end = info.event.end ? moment(info.event.end).format('YYYY-MM-DDTHH:mm') : start;
+    setFormData({
+      title: info.event.title,
+      start,
+      end,
+    });
     setShowEditForm(true);
   };
 
@@ -84,7 +98,7 @@ const MyCalendar: React.FC<MyCalendarProps> = ({ handleEventNotification }) => {
   const handleSubmit = async () => {
     const { title, start, end } = formData;
     if (title && start && end) {
-      const userId = currentUser ? currentUser.uid : null;
+      const userId = auth.currentUser ? auth.currentUser.uid : null;
       const newEvent = {
         title,
         start: new Date(start).toISOString(),
@@ -113,7 +127,7 @@ const MyCalendar: React.FC<MyCalendarProps> = ({ handleEventNotification }) => {
   const handleEditSubmit = async () => {
     const { title, start, end } = formData;
     if (title && start && end && selectedEvent && selectedEvent.id) {
-      const userId = currentUser ? currentUser.uid : null;
+      const userId = auth.currentUser ? auth.currentUser.uid : null;
       const updatedEvent = {
         ...selectedEvent,
         title,
@@ -124,11 +138,13 @@ const MyCalendar: React.FC<MyCalendarProps> = ({ handleEventNotification }) => {
       };
       try {
         await updateDoc(doc(db, 'eventos', selectedEvent.id), updatedEvent);
-        setEvents(prevEvents => prevEvents.map(event =>
-          event.id === selectedEvent.id ? updatedEvent : event
-        ));
+        setEvents(prevEvents => {
+          const updatedEvents = prevEvents.map(event =>
+            event.id === selectedEvent.id ? updatedEvent : event
+          );
+          return updatedEvents;
+        });
         setShowEditForm(false);
-        //handleEventNotification(updatedEvent);
       } catch (error) {
         console.error('Erro ao atualizar evento:', error);
         alert('Erro ao atualizar evento. Tente novamente.');
@@ -163,8 +179,13 @@ const MyCalendar: React.FC<MyCalendarProps> = ({ handleEventNotification }) => {
     }
   };
 
+  const handleCloseForm = () => {
+    setShowForm(false);
+    setShowEditForm(false);
+  };
+
   return (
-    <CallendarContainer>
+    <CalendarContainer>
       <FullCalendar
         ref={calendarRef}
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
@@ -178,12 +199,15 @@ const MyCalendar: React.FC<MyCalendarProps> = ({ handleEventNotification }) => {
         height="500px"
         selectable={true}
         select={handleDateSelect}
+        dateClick={handleDateClick}
         eventClick={handleEventClick}
         events={events}
         eventChange={(arg: EventChangeArg) => handleEventUpdate(arg.event)}
       />
       {showForm && (
+          <ModelContainer>
         <Model>
+          <CloseButton onClick={handleCloseForm}>×</CloseButton>
           <input
             type="text"
             placeholder="Digite o título do evento"
@@ -202,9 +226,13 @@ const MyCalendar: React.FC<MyCalendarProps> = ({ handleEventNotification }) => {
           />
           <Button onClick={handleSubmit}>Criar Evento</Button>
         </Model>
+        </ModelContainer>
       )}
       {showEditForm && (
+
+        <ModelContainer>
         <Model>
+          <CloseButton onClick={handleCloseForm}>×</CloseButton>
           <input
             type="text"
             placeholder="Digite o título do evento"
@@ -221,13 +249,15 @@ const MyCalendar: React.FC<MyCalendarProps> = ({ handleEventNotification }) => {
             value={formData.end}
             onChange={e => setFormData({ ...formData, end: e.target.value })}
           />
-          <div>
+          <ButtonContainer>
             <Button onClick={handleDelete}>Excluir Evento</Button>
             <Button onClick={handleEditSubmit}>Editar Evento</Button>
-          </div>
+          </ButtonContainer>
         </Model>
+        </ModelContainer>
+
       )}
-    </CallendarContainer>
+    </CalendarContainer>
   );
 };
 

@@ -1,3 +1,4 @@
+import { theme } from "@/assets/themes/theme";
 import styled from "styled-components";
 
 const ColorSwitcher = styled.div`
@@ -14,13 +15,12 @@ interface ContainerProps {
 }
 
 export const Container = styled.div<ContainerProps>`
-display: flex;
-align-items: center;
-justify-content: center;
-width: 100svw;
-height: 100svh;
-
-background-color: ${(props) => {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  height: 100vh;
+  background-color: ${(props) => {
     switch (props.color) {
       case 'rose':
         return '#F2C8C8';
@@ -31,10 +31,21 @@ background-color: ${(props) => {
       default:
         return '#F2C8C8';
     }
-    
   }};
+  
+  @media screen and (max-width: 700px) {
+    flex-direction: column;
+  }
+`;
 
-`
+export const Logo = styled.div`
+   display: none;
+   color: ${theme.colors.green800};
+  font-size: 2.5rem;
+  @media screen and (max-width: 700px) {
+    display: block;
+  }
+`;
 
 export const StyledGridContainer = styled.div`
   display: grid;
@@ -43,13 +54,16 @@ export const StyledGridContainer = styled.div`
     'menu main main main main main';
   margin-top: 10px;
   gap: 10px;
-  padding: 8px;
-  padding-right: 20px;
-
+ padding: 20px;
   width: 100rem;
 
-
-  @media (min-width: 340px) and (max-width: 540px) {
+  @media (max-width: 700px) {
+    grid-template-areas:
+      'menu'
+      'main';
+    grid-template-columns: 1fr;
+    width: 100%;
+    padding: 10px;
   }
 `;
 
@@ -74,6 +88,10 @@ export const GridItem = styled.div`
 
 export const Menu = styled(GridItem)`
   grid-area: menu;
+
+  @media screen and (max-width: 700px) {
+    display: none;
+  }
 `;
 
 export const Main = styled(GridItem)`
