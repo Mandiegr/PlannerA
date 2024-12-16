@@ -11,7 +11,7 @@ import { useUser } from '@/context/UserContext';
 const queryClient = new QueryClient();
 
 const Agenda: React.FC = () => {
-  const { user } = useUser(); // Use o contexto para acessar o user
+  const { user } = useUser(); 
   const [color, setColor] = useState<'rose' | 'green' | 'purple'>('rose');
   const [events, setEvents] = useState([]);
   const [notifications, setNotifications] = useState<any[]>([]);
