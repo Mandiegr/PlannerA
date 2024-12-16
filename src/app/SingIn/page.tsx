@@ -22,7 +22,7 @@ const RegisterGoogle = () => {
   return (
     <>
      <div>
-      <Button onClick={handleGoogleRegister}>   Sign in with Google <Google/> </Button>
+      <Button onClick={handleGoogleRegister}> <Google color="#CDB4DB"/> </Button>
     </div>
    </>
     

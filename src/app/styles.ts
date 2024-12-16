@@ -2,69 +2,72 @@ import { theme } from '@/assets/themes/theme';
 import styled from 'styled-components';
 
 export const Main = styled.div`
-display: flex;
-flex-direction: column;
-//justify-content: space-between; 
-justify-content: center;
-align-items: center;
-padding: 6rem;
-min-height: 100vh;
-background-color: ${theme.colors.rose400};
+  display: flex;
+  min-height: 100vh;
+  background-color: ${theme.colors.white};
+
+  @media screen and (max-width: 769px) {
+    flex-direction: column; 
+  }
 `;
 
-export const Text = styled.text`
-  font-size: ${theme.fontSizes.xll};
-  font-family: 'Times New Roman', Times, serif;
-  color: ${theme.colors.green800};
+export const Content = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: ${theme.colors.green800};
   text-align: center; 
+
+  
+  @media screen and (max-width: 769px) {
+    order: 2; 
+    border-radius: 40px 40px 0 0;
+    min-height: 100ch;
+  }
+`;
+
+export const ContentImage = styled.div`
+  flex: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  @media screen and (max-width: 769px) {
+    order: 1; 
+  }
+`;
+
+export const Text = styled.div`
+  font-size: ${theme.fontSizes.md};
+  font-family: 'Times New Roman', Times, serif;
+  color: ${theme.colors.lilas100};
+  text-align: center;
   margin-bottom: 50px;
 
-
-  @media screen and (max-width: 700px) {
+  @media screen and (max-width: 769px) {
     h3 {
-     font-size: 5rem;
+      font-size: 1rem;
     }
   }
 `;
 
-export const Square = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  flex-direction: column;
-  width: 500px; 
-  height: 500px; 
-  background-color:  ${theme.colors.white};
-  box-shadow: 30px 40px ${theme.colors.green800};
-
-  @media screen and (max-width: 700px) {
-   width: 300px;
-   height: 300px;
-
-  }
-    
-  
-`;
-
 export const Button = styled.button`
-
-  background-color:${theme.colors.green800};
-  color: white;
+  display: flex;
+  background-color: ${theme.colors.white};
   padding: 0.8rem;
-  border: none;
-  //width: 50%; 
-  text-align: center; 
+  border-radius: 50px;
+  text-align: center;
   font-weight: bold;
   font-size: ${theme.fontSizes.p};
   cursor: pointer;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
 
   &:hover {
-    background-color: ${theme.colors.rose400};
-    color: ${theme.colors.green800}
+    background-color: ${theme.colors.green800};
   }
-  
 `;
-
-
-
