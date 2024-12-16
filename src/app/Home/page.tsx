@@ -4,7 +4,7 @@ import React from 'react';
 import Image from 'next/image';
 import { Content, ContentImage, Main, Text } from '../styles';
 import SignIn from '../SingIn/page';
-import plannerA from '../../assets/plannerA.png'; 
+import plannerA from '../../assets/plannerA.jpg'; 
 
 const Home: React.FC = () => {
   return (
